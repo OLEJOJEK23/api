@@ -1,6 +1,6 @@
 from psycopg2 import connect
 from resources.config import *
-from loguru import  logger
+from loguru import logger
 import random
 import string
 
@@ -43,6 +43,17 @@ def token_check(token) -> tuple:
     cur.execute(query)
     query_result = cur.fetchone()
     return query_result
+
+
+def graph_check(graphid: int, owner_id: int) -> tuple:
+    connection = db_connection()
+    cur = connection.cursor()
+    query = f'''Select 1 from "graphs" WHERE graphID = {graphid} and ownerID = {owner_id};'''
+    cur.execute(query)
+    query_result = cur.fetchone()
+    return query_result
+
+
 
 #функции для аккаунта
 @logger.catch()
@@ -104,6 +115,7 @@ def delete_account(token: str) -> bool:
         cur.close()
         connection.commit()
         connection.close()
+
 
 #функции для сессии
 @logger.catch()
@@ -171,6 +183,7 @@ def get_session_list(token: str) -> list[tuple]:
         connection.commit()
         connection.close()
 
+
 #функции для графов
 @logger.catch()
 def add_graph(token: str, name:str) -> int:
@@ -246,9 +259,7 @@ def update_graph(token: str,graph_id:int, new_name: str) -> bool:
     try:
         query_result = token_check(token)
         if query_result is not None:
-            query = f'''Select 1 from "graphs" WHERE graphID = {graph_id} and ownerID = {query_result[0]};'''
-            cur.execute(query)
-            query_result = cur.fetchone()
+            query_result = graph_check(graph_id, query_result[0])
             if query_result[0] == 1:
                 query = f'''UPDATE "graphs" SET graphName = '{new_name}' where graphID = {graph_id};'''
                 cur.execute(query)
@@ -264,20 +275,25 @@ def update_graph(token: str,graph_id:int, new_name: str) -> bool:
         connection.commit()
         connection.close()
 
-#функции для графов
+
+#функции для точек
 @logger.catch()
-def add_graph(token: str, name:str) -> int:
+def add_node(token: str, id: int, x: float, y: float, name: str) -> int:
     query_result = None
     connection = db_connection()
     cur = connection.cursor()
     try:
         query_result = token_check(token)
         if query_result is not None:
-            query = f'''Insert Into "graphs"(graphName, ownerID) Values ('{name}',{query_result[0]})
-            RETURNING graphID;'''
-            cur.execute(query)
-            query_result = cur.fetchone()
-            return query_result[0]
+            query_result = graph_check(id, query_result[0])
+            if query_result == 1:
+                query = f'''Insert Into "node"(graphID, x, y, name) Values ({query_result[0]}, {x}, {y}, '{name}') 
+                RETURNING graphID;'''
+                cur.execute(query)
+                query_result = cur.fetchone()
+                return query_result[0]
+            else:
+                return  -1
         else:
             return -1
     except Exception as ex:
@@ -289,14 +305,14 @@ def add_graph(token: str, name:str) -> int:
 
 
 @logger.catch()
-def delete_graph(token: str, id:int) -> bool:
+def delete_node(token: str, id:int) -> bool:
     query_result = None
     connection = db_connection()
     cur = connection.cursor()
     try:
         query_result = token_check(token)
         if query_result is not None:
-            query = f'''DELETE FROM "graphs" WHERE graphID = {id};'''
+            query = f'''DELETE FROM "node" WHERE nodeId = {id};'''
             cur.execute(query)
             return True
         else:
@@ -310,17 +326,21 @@ def delete_graph(token: str, id:int) -> bool:
 
 
 @logger.catch()
-def get_graph_list(token: str) -> list[tuple]:
+def get_node_list(token: str, graphid: int) -> list[tuple]:
     query_result = None
     connection = db_connection()
     cur = connection.cursor()
     try:
         query_result = token_check(token)
         if query_result is not None:
-            query = f'''Select graphID,graphName FROM "graphs" WHERE ownerID = {query_result[0]}'''
-            cur.execute(query)
-            query_result = cur.fetchall()
-            return query_result
+            query_result = graph_check(graphid, query_result[0])
+            if query_result[0] == 1:
+                query = f'''Select nodeid, x, y, name FROM "node" WHERE graphID = {graphid}'''
+                cur.execute(query)
+                query_result = cur.fetchall()
+                return query_result
+            else:
+                return []
         else:
             return []
     except Exception as ex:
@@ -332,20 +352,130 @@ def get_graph_list(token: str) -> list[tuple]:
 
 
 @logger.catch()
-def update_graph(token: str,graph_id:int, new_name: str) -> bool:
+def update_node(token: str, graph_id: int, note_id: int, x: int, y: int, name: str) -> bool:
     query_result = None
     connection = db_connection()
     cur = connection.cursor()
     try:
         query_result = token_check(token)
         if query_result is not None:
-            query = f'''Select 1 from "graphs" WHERE graphID = {graph_id} and ownerID = {query_result[0]};'''
-            cur.execute(query)
-            query_result = cur.fetchone()
+            query_result = graph_check(graph_id, query_result[0])
             if query_result[0] == 1:
-                query = f'''UPDATE "graphs" SET graphName = '{new_name}' where graphID = {graph_id};'''
+                query = f'''Select 1 from "node" WHERE noteId = {note_id};'''
                 cur.execute(query)
-                return True
+                query_result = cur.fetchone()
+                if query_result[0] == 1:
+                    query = f'''UPDATE "node" SET name = '{name}',x={x},y={y} where noteid = {note_id};'''
+                    cur.execute(query)
+                    return True
+                else:
+                    return False
+            else:
+                return False
+        else:
+            return False
+    except Exception as ex:
+        logger.error(str(ex))
+    finally:
+        cur.close()
+        connection.commit()
+        connection.close()
+
+
+#функции для связей
+@logger.catch()
+def add_link(token: str, graph_id: int, source: int, target: int, value: float) -> int:
+    query_result = None
+    connection = db_connection()
+    cur = connection.cursor()
+    try:
+        query_result = token_check(token)
+        if query_result is not None:
+            query_result = graph_check(graph_id, query_result[0])
+            if query_result[0] == 1:
+                query = f'''Insert Into "link"(source, target, value, graphid) Values ({source}, {target},{value}, {query_result[0]}) 
+                RETURNING linkid;'''
+                cur.execute(query)
+                query_result = cur.fetchone()
+                return query_result[0]
+            else:
+                return -1
+        else:
+            return -1
+    except Exception as ex:
+        logger.error(str(ex))
+    finally:
+        cur.close()
+        connection.commit()
+        connection.close()
+
+
+@logger.catch()
+def delete_link(token: str, id:int) -> bool:
+    query_result = None
+    connection = db_connection()
+    cur = connection.cursor()
+    try:
+        query_result = token_check(token)
+        if query_result is not None:
+            query = f'''DELETE FROM "link" WHERE linkid = {id};'''
+            cur.execute(query)
+            return True
+        else:
+            return False
+    except Exception as ex:
+        logger.error(str(ex))
+    finally:
+        cur.close()
+        connection.commit()
+        connection.close()
+
+
+@logger.catch()
+def get_link_list(token: str, graphid: int) -> list[tuple]:
+    query_result = None
+    connection = db_connection()
+    cur = connection.cursor()
+    try:
+        query_result = token_check(token)
+        if query_result is not None:
+            query_result = graph_check(graphid, query_result[0])
+            if query_result[0] == 1:
+                query = f'''Select linkid, source, target, value FROM "link" WHERE graphid = {graphid}'''
+                cur.execute(query)
+                query_result = cur.fetchall()
+                return query_result
+            else:
+                return []
+        else:
+            return []
+    except Exception as ex:
+        logger.error(str(ex))
+    finally:
+        cur.close()
+        connection.commit()
+        connection.close()
+
+
+@logger.catch()
+def update_link(token: str, graph_id: int, link_id: int, value: str) -> bool:
+    query_result = None
+    connection = db_connection()
+    cur = connection.cursor()
+    try:
+        query_result = token_check(token)
+        if query_result is not None:
+            query_result = graph_check(graph_id, query_result[0])
+            if query_result[0] == 1:
+                query = f'''Select 1 from "link" WHERE linkid = {link_id};'''
+                cur.execute(query)
+                query_result = cur.fetchone()
+                if query_result[0] == 1:
+                    query = f'''UPDATE "link" SET value = '{value}' where linkid = {link_id};'''
+                    cur.execute(query)
+                    return True
+                else:
+                    return False
             else:
                 return False
         else:
