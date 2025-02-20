@@ -1,0 +1,5 @@
+host = 'localhost'
+port = '5432'
+user = 'lab'
+password = 'password'
+dbname = 'Graphs'
