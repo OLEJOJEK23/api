@@ -8,7 +8,7 @@ CREATE ROLE lab WITH
   NOBYPASSRLS
   ENCRYPTED PASSWORD 'SCRAM-SHA-256$4096:ER7XiX6uUwb6Hwb7LOliVw==$rUbIiutu20ZfHr5iUxihb5BQydI7ODi9FnvnmfRHzs8=:YeLvBc7mmlo8YD3M89hSzxQNwGLuhj1XYsqTSqhPQYM=';
 
-CREATE DATABASE IF NOT EXISTS "Graphs"
+CREATE DATABASE "Graphs"
     WITH
     OWNER = lab
     ENCODING = 'UTF8'
@@ -20,7 +20,6 @@ CREATE DATABASE IF NOT EXISTS "Graphs"
     IS_TEMPLATE = False;
 
 
-use "Graphs"
 CREATE TABLE IF NOT EXISTS public.graphs
 (
     "graphID" serial NOT NULL,
@@ -41,7 +40,7 @@ CREATE TABLE IF NOT EXISTS public.link
 
 CREATE TABLE IF NOT EXISTS public.node
 (
-    "nodeId" integer NOT NULL DEFAULT nextval('"Node_NodeId_seq"'::regclass),
+    "nodeId" serial NOT NULL,
     "graphID" integer NOT NULL,
     x numeric NOT NULL,
     y numeric NOT NULL,
@@ -53,7 +52,7 @@ CREATE TABLE IF NOT EXISTS public.node
 
 CREATE TABLE IF NOT EXISTS public.session
 (
-    "sessionID" integer NOT NULL DEFAULT nextval('"Session_sessionID_seq"'::regclass),
+    "sessionID" serial NOT NULL,
     token text COLLATE pg_catalog."default" NOT NULL,
     userid integer NOT NULL,
     CONSTRAINT "Session_pkey" PRIMARY KEY ("sessionID"),
