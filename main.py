@@ -11,7 +11,7 @@ app = Flask('API_Notes')
 
 
 #аккаунт
-@app.route('/account/register/<login>/<password>', methods=['Put'])
+@app.route('/account/register/<login>/<password>', methods=['PUT'])
 def registration(login, password) -> str:
     if create_account(login, password):
         return "Account has been created"
