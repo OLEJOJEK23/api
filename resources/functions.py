@@ -30,7 +30,7 @@ def account_exist(login: str) -> tuple:
 def log_in_account(login: str, password: str) -> tuple:
     connection = db_connection()
     cur = connection.cursor()
-    query = f'''SELECT userid FROM "User" WHERE userlogin = '{login}' AND userpassword = '{password}';'''
+    query = f'''SELECT "userID" FROM "users" WHERE login = '{login}' AND password = '{password}';'''
     cur.execute(query)
     query_result = cur.fetchone()
     return query_result
@@ -39,7 +39,7 @@ def log_in_account(login: str, password: str) -> tuple:
 def token_check(token) -> tuple:
     connection = db_connection()
     cur = connection.cursor()
-    query = f'''SELECT 1 FROM "Session" WHERE token = '{token}';'''
+    query = f'''SELECT * FROM "session" WHERE token = '{token}';'''
     cur.execute(query)
     query_result = cur.fetchone()
     return query_result
@@ -77,13 +77,12 @@ def create_account(login: str, password: str) -> bool:
 
 @logger.catch()
 def update_password(token: str, new_password: str) -> bool:
-    query_result = None
     connection = db_connection()
     cur = connection.cursor()
     try:
         query_result = token_check(token)
         if query_result is not None:
-            query = f'''UPDATE "users" set password = '{new_password}' WHERE userID = {query_result[0]};'''
+            query = f'''UPDATE "users" set password = '{new_password}' WHERE "userID" = {query_result[2]};'''
             cur.execute(query)
             return True
         else:
@@ -98,13 +97,12 @@ def update_password(token: str, new_password: str) -> bool:
 
 @logger.catch()
 def delete_account(token: str) -> bool:
-    query_result = None
     connection = db_connection()
     cur = connection.cursor()
     try:
         query_result = token_check(token)
         if query_result is not None:
-            query = f'''DELETE FROM "users" WHERE userid = {query_result[0]};'''
+            query = f'''DELETE FROM "users" WHERE "userID" = {query_result[2]};'''
             cur.execute(query)
             return True
         else:
@@ -122,7 +120,6 @@ def delete_account(token: str) -> bool:
 def create_session(login: str, password: str) -> str:
     connection = db_connection()
     cur = connection.cursor()
-    query_result = None
     try:
         query_result = log_in_account(login,password)
         if query_result is not None:
@@ -143,7 +140,6 @@ def create_session(login: str, password: str) -> str:
 
 @logger.catch()
 def delete_session(token: str) -> bool:
-    query_result = None
     connection = db_connection()
     cur = connection.cursor()
     try:
@@ -164,13 +160,12 @@ def delete_session(token: str) -> bool:
 
 @logger.catch()
 def get_session_list(token: str) -> list[tuple]:
-    query_result = None
     connection = db_connection()
     cur = connection.cursor()
     try:
         query_result = token_check(token)
         if query_result is not None:
-            query = f'''Select sessionID,token FROM "session" WHERE userid = {query_result[0]}'''
+            query = f'''Select "sessionID","token" FROM "session" WHERE "userid" = {query_result[2]}'''
             cur.execute(query)
             query_result = cur.fetchall()
             return query_result
@@ -187,7 +182,6 @@ def get_session_list(token: str) -> list[tuple]:
 #функции для графов
 @logger.catch()
 def add_graph(token: str, name:str) -> int:
-    query_result = None
     connection = db_connection()
     cur = connection.cursor()
     try:
@@ -210,7 +204,6 @@ def add_graph(token: str, name:str) -> int:
 
 @logger.catch()
 def delete_graph(token: str, id:int) -> bool:
-    query_result = None
     connection = db_connection()
     cur = connection.cursor()
     try:
@@ -231,7 +224,6 @@ def delete_graph(token: str, id:int) -> bool:
 
 @logger.catch()
 def get_graph_list(token: str) -> list[tuple]:
-    query_result = None
     connection = db_connection()
     cur = connection.cursor()
     try:
@@ -253,7 +245,6 @@ def get_graph_list(token: str) -> list[tuple]:
 
 @logger.catch()
 def update_graph(token: str,graph_id:int, new_name: str) -> bool:
-    query_result = None
     connection = db_connection()
     cur = connection.cursor()
     try:
@@ -279,7 +270,6 @@ def update_graph(token: str,graph_id:int, new_name: str) -> bool:
 #функции для точек
 @logger.catch()
 def add_node(token: str, id: int, x: float, y: float, name: str) -> int:
-    query_result = None
     connection = db_connection()
     cur = connection.cursor()
     try:
@@ -306,7 +296,6 @@ def add_node(token: str, id: int, x: float, y: float, name: str) -> int:
 
 @logger.catch()
 def delete_node(token: str, id:int) -> bool:
-    query_result = None
     connection = db_connection()
     cur = connection.cursor()
     try:
@@ -327,7 +316,6 @@ def delete_node(token: str, id:int) -> bool:
 
 @logger.catch()
 def get_node_list(token: str, graphid: int) -> list[tuple]:
-    query_result = None
     connection = db_connection()
     cur = connection.cursor()
     try:
@@ -353,7 +341,6 @@ def get_node_list(token: str, graphid: int) -> list[tuple]:
 
 @logger.catch()
 def update_node(token: str, graph_id: int, note_id: int, x: int, y: int, name: str) -> bool:
-    query_result = None
     connection = db_connection()
     cur = connection.cursor()
     try:
@@ -385,7 +372,6 @@ def update_node(token: str, graph_id: int, note_id: int, x: int, y: int, name: s
 #функции для связей
 @logger.catch()
 def add_link(token: str, graph_id: int, source: int, target: int, value: float) -> int:
-    query_result = None
     connection = db_connection()
     cur = connection.cursor()
     try:
@@ -412,7 +398,6 @@ def add_link(token: str, graph_id: int, source: int, target: int, value: float) 
 
 @logger.catch()
 def delete_link(token: str, id:int) -> bool:
-    query_result = None
     connection = db_connection()
     cur = connection.cursor()
     try:
@@ -433,7 +418,6 @@ def delete_link(token: str, id:int) -> bool:
 
 @logger.catch()
 def get_link_list(token: str, graphid: int) -> list[tuple]:
-    query_result = None
     connection = db_connection()
     cur = connection.cursor()
     try:
@@ -459,7 +443,6 @@ def get_link_list(token: str, graphid: int) -> list[tuple]:
 
 @logger.catch()
 def update_link(token: str, graph_id: int, link_id: int, value: str) -> bool:
-    query_result = None
     connection = db_connection()
     cur = connection.cursor()
     try:

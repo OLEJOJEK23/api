@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask
 from loguru import logger
 from resources.functions import (create_account, delete_account, update_password, create_session, delete_session,
                                  get_session_list, get_graph_list, update_graph, delete_graph, add_graph,
@@ -130,4 +130,4 @@ def remove_link(token, id) -> str:
 
 if __name__ == '__main__':
     app.debug = True
-    app.run(host="192.168.147.64")
+    app.run(host="0.0.0.0")
