@@ -48,14 +48,13 @@ def token_check(token) -> tuple:
 def graph_check(graphid: int, owner_id: int) -> tuple:
     connection = db_connection()
     cur = connection.cursor()
-    query = f'''Select 1 from "graphs" WHERE graphID = {graphid} and ownerID = {owner_id};'''
+    query = f'''Select 1 from "graph" WHERE "graphID" = {graphid} and "ownerid" = {owner_id};'''
     cur.execute(query)
     query_result = cur.fetchone()
     return query_result
 
 
-
-#функции для аккаунта
+# функции для аккаунта
 @logger.catch()
 def create_account(login: str, password: str) -> bool:
     connection = db_connection()
@@ -73,7 +72,7 @@ def create_account(login: str, password: str) -> bool:
         cur.close()
         connection.commit()
         connection.close()
-    return True
+
 
 @logger.catch()
 def update_password(token: str, new_password: str) -> bool:
@@ -179,16 +178,16 @@ def get_session_list(token: str) -> list[tuple]:
         connection.close()
 
 
-#функции для графов
+# функции для графов
 @logger.catch()
-def add_graph(token: str, name:str) -> int:
+def add_graph(token: str, name: str) -> int:
     connection = db_connection()
     cur = connection.cursor()
     try:
         query_result = token_check(token)
         if query_result is not None:
-            query = f'''Insert Into "graphs"(graphName, ownerID) Values ('{name}',{query_result[0]})
-            RETURNING graphID;'''
+            query = f'''Insert into "graph" (name, ownerID) Values ('{name}',{query_result[2]})
+            RETURNING "graphID";'''
             cur.execute(query)
             query_result = cur.fetchone()
             return query_result[0]
@@ -203,13 +202,13 @@ def add_graph(token: str, name:str) -> int:
 
 
 @logger.catch()
-def delete_graph(token: str, id:int) -> bool:
+def delete_graph(token: str, id: int) -> bool:
     connection = db_connection()
     cur = connection.cursor()
     try:
         query_result = token_check(token)
         if query_result is not None:
-            query = f'''DELETE FROM "graphs" WHERE graphID = {id};'''
+            query = f'''DELETE FROM "graph" WHERE "graphID" = {id};'''
             cur.execute(query)
             return True
         else:
@@ -229,7 +228,7 @@ def get_graph_list(token: str) -> list[tuple]:
     try:
         query_result = token_check(token)
         if query_result is not None:
-            query = f'''Select graphID,graphName FROM "graphs" WHERE ownerID = {query_result[0]}'''
+            query = f'''Select "graphID","name" FROM "graph" WHERE ownerID = {query_result[2]}'''
             cur.execute(query)
             query_result = cur.fetchall()
             return query_result
@@ -244,15 +243,15 @@ def get_graph_list(token: str) -> list[tuple]:
 
 
 @logger.catch()
-def update_graph(token: str,graph_id:int, new_name: str) -> bool:
+def update_graph(token: str, graph_id: int, new_name: str) -> bool:
     connection = db_connection()
     cur = connection.cursor()
     try:
         query_result = token_check(token)
         if query_result is not None:
-            query_result = graph_check(graph_id, query_result[0])
+            query_result = graph_check(graph_id, query_result[2])
             if query_result[0] == 1:
-                query = f'''UPDATE "graphs" SET graphName = '{new_name}' where graphID = {graph_id};'''
+                query = f'''UPDATE "graph" SET "name" = '{new_name}' where "graphID" = {graph_id};'''
                 cur.execute(query)
                 return True
             else:
@@ -267,23 +266,23 @@ def update_graph(token: str,graph_id:int, new_name: str) -> bool:
         connection.close()
 
 
-#функции для точек
+# функции для точек
 @logger.catch()
-def add_node(token: str, id: int, x: float, y: float, name: str) -> int:
+def add_node(token: str, graph_id: int, x: float, y: float, name: str) -> int:
     connection = db_connection()
     cur = connection.cursor()
     try:
         query_result = token_check(token)
         if query_result is not None:
-            query_result = graph_check(id, query_result[0])
-            if query_result == 1:
-                query = f'''Insert Into "node"(graphID, x, y, name) Values ({query_result[0]}, {x}, {y}, '{name}') 
-                RETURNING graphID;'''
+            query_result = graph_check(graph_id, query_result[2])
+            if query_result[0] == 1:
+                query = f'''Insert Into "node" (graphID, x, y, name) Values ({graph_id}, {x}, {y}, '{name}') 
+                RETURNING "nodeid";'''
                 cur.execute(query)
                 query_result = cur.fetchone()
                 return query_result[0]
             else:
-                return  -1
+                return -1
         else:
             return -1
     except Exception as ex:
@@ -295,13 +294,13 @@ def add_node(token: str, id: int, x: float, y: float, name: str) -> int:
 
 
 @logger.catch()
-def delete_node(token: str, id:int) -> bool:
+def delete_node(token: str, id: int) -> bool:
     connection = db_connection()
     cur = connection.cursor()
     try:
         query_result = token_check(token)
         if query_result is not None:
-            query = f'''DELETE FROM "node" WHERE nodeId = {id};'''
+            query = f'''DELETE FROM "node" WHERE "nodeid" = {id};'''
             cur.execute(query)
             return True
         else:
@@ -321,9 +320,9 @@ def get_node_list(token: str, graphid: int) -> list[tuple]:
     try:
         query_result = token_check(token)
         if query_result is not None:
-            query_result = graph_check(graphid, query_result[0])
+            query_result = graph_check(graphid, query_result[2])
             if query_result[0] == 1:
-                query = f'''Select nodeid, x, y, name FROM "node" WHERE graphID = {graphid}'''
+                query = f'''Select "nodeid", "x", "y", "name" FROM "node" WHERE "graphid" = {graphid}'''
                 cur.execute(query)
                 query_result = cur.fetchall()
                 return query_result
@@ -340,19 +339,19 @@ def get_node_list(token: str, graphid: int) -> list[tuple]:
 
 
 @logger.catch()
-def update_node(token: str, graph_id: int, note_id: int, x: int, y: int, name: str) -> bool:
+def update_node(token: str, graph_id: int, note_id: int, x: float, y: float, name: str) -> bool:
     connection = db_connection()
     cur = connection.cursor()
     try:
         query_result = token_check(token)
         if query_result is not None:
-            query_result = graph_check(graph_id, query_result[0])
+            query_result = graph_check(graph_id, query_result[2])
             if query_result[0] == 1:
-                query = f'''Select 1 from "node" WHERE noteId = {note_id};'''
+                query = f'''Select 1 from "node" WHERE "nodeid" = {note_id};'''
                 cur.execute(query)
                 query_result = cur.fetchone()
                 if query_result[0] == 1:
-                    query = f'''UPDATE "node" SET name = '{name}',x={x},y={y} where noteid = {note_id};'''
+                    query = f'''UPDATE "node" SET "name"='{name}',"x"={x},"y"={y} where "nodeid" = {note_id};'''
                     cur.execute(query)
                     return True
                 else:
@@ -369,7 +368,7 @@ def update_node(token: str, graph_id: int, note_id: int, x: int, y: int, name: s
         connection.close()
 
 
-#функции для связей
+# функции для связей
 @logger.catch()
 def add_link(token: str, graph_id: int, source: int, target: int, value: float) -> int:
     connection = db_connection()
@@ -442,7 +441,7 @@ def get_link_list(token: str, graphid: int) -> list[tuple]:
 
 
 @logger.catch()
-def update_link(token: str, graph_id: int, link_id: int, value: str) -> bool:
+def update_link(token: str, graph_id: int, link_id: int, value: float) -> bool:
     connection = db_connection()
     cur = connection.cursor()
     try:
