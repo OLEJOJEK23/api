@@ -164,7 +164,8 @@ def get_session_list(token: str) -> list[tuple]:
     try:
         query_result = token_check(token)
         if query_result is not None:
-            query = f'''Select "sessionID","token" FROM "session" WHERE "userid" = {query_result[2]}'''
+            query = f'''Select Select json_agg(json_build_object('id',"sessionID",'token',"token")) 
+            FROM "session" WHERE "userid" = {query_result[2]}'''
             cur.execute(query)
             query_result = cur.fetchall()
             return query_result
@@ -228,10 +229,11 @@ def get_graph_list(token: str) -> list[tuple]:
     try:
         query_result = token_check(token)
         if query_result is not None:
-            query = f'''Select "graphID","name" FROM "graph" WHERE ownerID = {query_result[2]}'''
+            query = f'''Select json_agg(json_build_object('id',"graphID",'name',"name")) 
+            FROM "graph" WHERE ownerID = {query_result[2]}'''
             cur.execute(query)
             query_result = cur.fetchall()
-            return query_result
+            return query_result[0][0]
         else:
             return []
     except Exception as ex:
@@ -322,10 +324,11 @@ def get_node_list(token: str, graphid: int) -> list[tuple]:
         if query_result is not None:
             query_result = graph_check(graphid, query_result[2])
             if query_result[0] == 1:
-                query = f'''Select "nodeid", "x", "y", "name" FROM "node" WHERE "graphid" = {graphid}'''
+                query = f'''Select json_agg(json_build_object('id',"nodeid",'x',"x",'y',"y",'name',"name")) 
+                FROM "node" WHERE "graphid" = {graphid}'''
                 cur.execute(query)
                 query_result = cur.fetchall()
-                return query_result
+                return query_result[0][0]
             else:
                 return []
         else:
@@ -424,10 +427,11 @@ def get_link_list(token: str, graphid: int) -> list[tuple]:
         if query_result is not None:
             query_result = graph_check(graphid, query_result[2])
             if query_result[0] == 1:
-                query = f'''Select "linkid", "source", "target", "value" FROM "link" WHERE "graphid" = {graphid}'''
+                query = f'''Select json_agg(json_build_object('id',"linkid",'souce',"source",'target',
+                "target",'value',"value")) FROM "link" WHERE "graphid" = {graphid}'''
                 cur.execute(query)
                 query_result = cur.fetchall()
-                return query_result
+                return query_result[0][0]
             else:
                 return []
         else:

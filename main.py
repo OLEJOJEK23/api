@@ -1,6 +1,7 @@
 from flask import Flask
 from flask import request
 from loguru import logger
+import json
 from resources.functions import (create_account, delete_account, update_password, create_session, delete_session,
                                  get_session_list, get_graph_list, update_graph, delete_graph, add_graph,
                                  get_node_list, delete_node, update_node, add_node,
@@ -58,23 +59,23 @@ def log_out() -> str:
 
 
 @app.route('/account/session-list', methods=['GET'])
-def get_sessions() -> list[tuple]:
+def get_sessions() -> list:
     token = request.args.get('token')
     return get_session_list(token)
 
 
 #графы
 @app.route('/graphs/graph-list', methods=['GET'])
-def get_graphs() -> list[tuple]:
+def get_graphs() -> list:
     token = request.args.get('token')
     return get_graph_list(token)
 
 
 @app.route('/graphs/add', methods=['PUT'])
-def new_graph() -> int:
+def new_graph() -> str:
     token = request.args.get('token')
     name = request.args.get('name')
-    return add_graph(token, name)
+    return str(add_graph(token, name))
 
 
 @app.route('/graphs/update', methods=['POST'])
@@ -98,20 +99,20 @@ def remove_graph() -> str:
 
 #Точки
 @app.route('/nodes/node-list', methods=['GET'])
-def get_nodes() -> list[tuple]:
+def get_nodes() -> list:
     token = request.args.get('token')
     graph_id = int(request.args.get('id'))
     return get_node_list(token, graph_id)
 
 
 @app.route('/nodes/add', methods=['PUT'])
-def new_node() -> int:
+def new_node() -> str:
     token = request.args.get('token')
     graph_id = int(request.args.get('id'))
     x = float(request.args.get('x'))
     y = float(request.args.get('y'))
     name = request.args.get('name')
-    return add_node(token, graph_id, x, y, name)
+    return str(add_node(token, graph_id, x, y, name))
 
 
 @app.route('/nodes/update', methods=['POST'])
@@ -138,20 +139,20 @@ def remove_node() -> str:
 
 #Связи
 @app.route('/links/link-list', methods=['GET'])
-def get_links() -> list[tuple]:
+def get_links() -> list:
     token = request.args.get('token')
     graph_id = int(request.args.get('id'))
     return get_link_list(token, graph_id)
 
 
 @app.route('/links/add', methods=['PUT'])
-def new_link() -> int:
+def new_link() -> str:
     token = request.args.get('token')
     graph_id = int(request.args.get('id'))
     source = int(request.args.get('source'))
     target = int(request.args.get('target'))
     value = float(request.args.get('value'))
-    return add_link(token, graph_id, source, target, value)
+    return str(add_link(token, graph_id, source, target, value))
 
 
 @app.route('/links/update', methods=['POST'])
