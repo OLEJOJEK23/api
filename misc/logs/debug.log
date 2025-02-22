@@ -3,3 +3,11 @@ LINE 1: Select json_agg("graphID","name") FROM "graph" WHERE ownerID...
                ^
 HINT:  Функция с данными именем и типами аргументов не найдена. Возможно, вам следует добавить явные приведения типов.
 
+2025-02-23T02:42:02.827234+0300 ERROR ОШИБКА:  ошибка синтаксиса (примерное положение: "Select")
+LINE 1: Select Select json_agg(json_build_object('id',"sessionID",'t...
+               ^
+
+2025-02-23T02:42:22.792051+0300 ERROR ОШИБКА:  ошибка синтаксиса (примерное положение: "Select")
+LINE 1: Select Select json_agg(json_build_object('id',"sessionID",'t...
+               ^
+

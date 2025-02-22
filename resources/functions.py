@@ -164,11 +164,15 @@ def get_session_list(token: str) -> list[tuple]:
     try:
         query_result = token_check(token)
         if query_result is not None:
-            query = f'''Select Select json_agg(json_build_object('id',"sessionID",'token',"token")) 
+            query = f'''Select json_agg(json_build_object('id',"sessionID",'token',"token")) 
             FROM "session" WHERE "userid" = {query_result[2]}'''
             cur.execute(query)
             query_result = cur.fetchall()
-            return query_result
+            print(query_result)
+            if query_result[0][0]:
+                return query_result[0][0]
+            else:
+                return []
         else:
             return []
     except Exception as ex:
