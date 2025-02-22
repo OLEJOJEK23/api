@@ -233,7 +233,10 @@ def get_graph_list(token: str) -> list[tuple]:
             FROM "graph" WHERE ownerID = {query_result[2]}'''
             cur.execute(query)
             query_result = cur.fetchall()
-            return query_result[0][0]
+            if query_result[0][0]:
+                return query_result[0][0]
+            else:
+                return []
         else:
             return []
     except Exception as ex:
@@ -328,7 +331,10 @@ def get_node_list(token: str, graphid: int) -> list[tuple]:
                 FROM "node" WHERE "graphid" = {graphid}'''
                 cur.execute(query)
                 query_result = cur.fetchall()
-                return query_result[0][0]
+                if query_result[0][0]:
+                    return query_result[0][0]
+                else:
+                    return []
             else:
                 return []
         else:
@@ -431,7 +437,10 @@ def get_link_list(token: str, graphid: int) -> list[tuple]:
                 "target",'value',"value")) FROM "link" WHERE "graphid" = {graphid}'''
                 cur.execute(query)
                 query_result = cur.fetchall()
-                return query_result[0][0]
+                if query_result[0][0]:
+                    return query_result[0][0]
+                else:
+                    return []
             else:
                 return []
         else:
