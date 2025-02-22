@@ -180,7 +180,7 @@ def test_add_node(login: str, password: str, graph_name: str, x: float, y: float
         rows_before = len(cur.fetchall())
         create_account(login, password)
         token = create_session(login, password)
-        graph_id = add_graph(create_session(login, password), graph_name)
+        graph_id = add_graph(token, graph_name)
         add_node(token, graph_id, x, y, node_name)
         cur.execute(query)
         rows_after = len(cur.fetchall())
@@ -216,7 +216,7 @@ def test_delete_node(login: str, password: str, graph_name: str, x: float, y: fl
         rows_before = len(cur.fetchall())
         create_account(login, password)
         token = create_session(login, password)
-        graph_id = add_graph(create_session(login, password), graph_name)
+        graph_id = add_graph(token, graph_name)
         node_id = add_node(token, graph_id, x, y, node_name)
         delete_node(token, node_id)
         cur.execute(query)
@@ -328,3 +328,170 @@ def test_update_node(login: str, password: str, graph: str, x: float, y: float, 
         connection.commit()
         connection.close()
     assert (name_after == new_name and y_after == new_y and x_after == new_x) == result
+
+
+# link tests
+@pytest.mark.parametrize(
+    "login, password, graph_name, source, target, value, result",
+    [
+        ('testUser1', 'testUser1', 'testGraph1', 10, 15, 324234.4324, True),
+        ('testUser2', 'testUser2', 'testGraph2', 1, 5, 3241, True),
+        ('testUser3', 'testUser3', 'testGraph3', 1, 15, -213412, True),
+        ('testUser4', 'testUser4', 'testGraph4', 0, 1, 2345, True),
+        ('testUser5', 'testUser5', 'testGraph5', 34, 12, 3241, True),
+    ]
+)
+def test_add_link(login: str, password: str, graph_name: str, source: int, target: int, value: float, result: bool):
+    connection = db_connection()
+    cur = connection.cursor()
+    rows_before = 0
+    rows_after = 0
+    try:
+        query = f'''SELECT * FROM "link"'''
+        cur.execute(query)
+        rows_before = len(cur.fetchall())
+        create_account(login, password)
+        token = create_session(login, password)
+        graph_id = add_graph(token, graph_name)
+        add_link(token, graph_id, source, target, value)
+        cur.execute(query)
+        rows_after = len(cur.fetchall())
+    except Exception as ex:
+        print(ex)
+    finally:
+        query = f'''DELETE FROM "users" WHERE login = '{login}' and password = '{password}' '''
+        cur.execute(query)
+        cur.close()
+        connection.commit()
+        connection.close()
+    assert (rows_before < rows_after) == result
+
+
+@pytest.mark.parametrize(
+    "login, password, graph_name, source, target, value, result",
+    [
+        ('testUser1', 'testUser1', 'testGraph1', 10, 15, 324234.4324, True),
+        ('testUser2', 'testUser2', 'testGraph2', 1, 5, 3241, True),
+        ('testUser3', 'testUser3', 'testGraph3', 1, 15, -213412, True),
+        ('testUser4', 'testUser4', 'testGraph4', 0, 1, 2345, True),
+        ('testUser5', 'testUser5', 'testGraph5', 34, 12, 3241, True),
+    ]
+)
+def test_delete_link(login: str, password: str, graph_name: str, source: int, target: int, value: float, result: bool):
+    connection = db_connection()
+    cur = connection.cursor()
+    rows_before = 0
+    rows_after = 0
+    try:
+        query = f'''SELECT * FROM "link"'''
+        cur.execute(query)
+        rows_before = len(cur.fetchall())
+        create_account(login, password)
+        token = create_session(login, password)
+        graph_id = add_graph(token, graph_name)
+        link_id = add_link(token, graph_id, source, target, value)
+        delete_link(token, link_id)
+        cur.execute(query)
+        rows_after = len(cur.fetchall())
+    except Exception as ex:
+        print(ex)
+    finally:
+        query = f'''DELETE FROM "users" WHERE login = '{login}' and password = '{password}' '''
+        cur.execute(query)
+        cur.close()
+        connection.commit()
+        connection.close()
+    assert (rows_before == rows_after) == result
+
+
+@pytest.mark.parametrize(
+    "login, password, graph, links, result",
+    [
+        ('testUser1', 'testUser1', 'testText1',
+                                    [[10, 15, 21412],
+                                     [-10, 0, 124234],
+                                     [124, 2345, 124.243],
+                                     [0, 0.124, -12341],
+                                     [234, 4234, 2141]], True),
+        ('testUser2', 'testUser2', 'testText1',
+                                     [[10, 15, 234],
+                                      [-10, 0, 124234],
+                                      [124, 2345, 124.243],
+                                      [0, 0.124, -12341],
+                                      [234, 4234, 2141]], True),
+        ('testUser3', 'testUser3', '1',
+                                     [[1023124234, -32432423, '1'],
+                                      [-10, 0, 124234],
+                                      [124, 2345, 124.243],
+                                      [0, 0.124, -12341],
+                                      [234, 4234, 2141]], True),
+        ('fsdffretf', 'dfgdfgvdfsgsfdg', 'graph1',
+                                     [[10, 15, 2341],
+                                      [-10, 0, 124234],
+                                      [124, 2345, 124.243],
+                                      [0, 0.124, -12341],
+                                      [234, 4234, 2141]], True),
+        ('234244123', '21423413123', 'bvnyu',
+                                     [[10, 15, 32423],
+                                      [-10, 0, 124234],
+                                      [124, 2345, 124.243],
+                                      [0, 0.124, -12341],
+                                      [234, 4234, 2141]], True),
+    ]
+)
+def test_get_all_links(login: str, password: str, graph: str, links: list, result: bool):
+    connection = db_connection()
+    cur = connection.cursor()
+    all_rows_actual = 0
+    all_rows_exspected = 5
+    try:
+        create_account(login, password)
+        token = create_session(login, password)
+        graph_id = add_graph(token, graph)
+        for item in links:
+            add_link(token, graph_id, item[0], item[1], item[2])
+        all_rows_actual = len(get_link_list(token, graph_id))
+    except Exception as ex:
+        print(ex)
+    finally:
+        query = f'''DELETE FROM "users" WHERE login = '{login}' and password = '{password}' '''
+        cur.execute(query)
+        cur.close()
+        connection.commit()
+        connection.close()
+    assert (all_rows_exspected == all_rows_actual) == result
+
+
+@pytest.mark.parametrize(
+    "login, password, graph_name, source, target, value, new_value, result",
+    [
+        ('testUser1', 'testUser1', 'testGraph1', 10, 15, 324234.4324, 1, True),
+        ('testUser2', 'testUser2', 'testGraph2', 1, 5, 3241, 423, True),
+        ('testUser3', 'testUser3', 'testGraph3', 1, 15, -213412, -124, True),
+        ('testUser4', 'testUser4', 'testGraph4', 0, 1, 2345, 4324, True),
+        ('testUser5', 'testUser5', 'testGraph5', 34, 12, 3241, 4234, True),
+    ]
+)
+def test_update_link(login: str, password: str, graph_name: str, source: int, target: int, value: float,
+                     new_value: float, result: bool):
+    connection = db_connection()
+    cur = connection.cursor()
+    value_after = 0.0
+    try:
+        create_account(login, password)
+        token = create_session(login, password)
+        graph_id = add_graph(token, graph_name)
+        link_id = add_link(token, graph_id, source, target, value)
+        update_link(token, graph_id, link_id, new_value)
+        query = f'''SELECT "value" FROM "link" where "linkid" = '{link_id}' '''
+        cur.execute(query)
+        value_after = float(cur.fetchone()[0])
+    except Exception as ex:
+        print(ex)
+    finally:
+        query = f'''DELETE FROM "users" WHERE login = '{login}' and password = '{password}' '''
+        cur.execute(query)
+        cur.close()
+        connection.commit()
+        connection.close()
+    assert (value_after == new_value) == result

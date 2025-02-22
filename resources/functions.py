@@ -376,10 +376,10 @@ def add_link(token: str, graph_id: int, source: int, target: int, value: float) 
     try:
         query_result = token_check(token)
         if query_result is not None:
-            query_result = graph_check(graph_id, query_result[0])
+            query_result = graph_check(graph_id, query_result[2])
             if query_result[0] == 1:
-                query = f'''Insert Into "link"(source, target, value, graphid) Values ({source}, {target},{value}, {query_result[0]}) 
-                RETURNING linkid;'''
+                query = f'''Insert Into "link"(source, target, value, graphid) Values ({source}, {target},{value}, {graph_id}) 
+                RETURNING "linkid";'''
                 cur.execute(query)
                 query_result = cur.fetchone()
                 return query_result[0]
@@ -396,13 +396,13 @@ def add_link(token: str, graph_id: int, source: int, target: int, value: float) 
 
 
 @logger.catch()
-def delete_link(token: str, id:int) -> bool:
+def delete_link(token: str, id: int) -> bool:
     connection = db_connection()
     cur = connection.cursor()
     try:
         query_result = token_check(token)
         if query_result is not None:
-            query = f'''DELETE FROM "link" WHERE linkid = {id};'''
+            query = f'''DELETE FROM "link" WHERE "linkid" = {id};'''
             cur.execute(query)
             return True
         else:
@@ -422,9 +422,9 @@ def get_link_list(token: str, graphid: int) -> list[tuple]:
     try:
         query_result = token_check(token)
         if query_result is not None:
-            query_result = graph_check(graphid, query_result[0])
+            query_result = graph_check(graphid, query_result[2])
             if query_result[0] == 1:
-                query = f'''Select linkid, source, target, value FROM "link" WHERE graphid = {graphid}'''
+                query = f'''Select "linkid", "source", "target", "value" FROM "link" WHERE "graphid" = {graphid}'''
                 cur.execute(query)
                 query_result = cur.fetchall()
                 return query_result
@@ -447,13 +447,13 @@ def update_link(token: str, graph_id: int, link_id: int, value: float) -> bool:
     try:
         query_result = token_check(token)
         if query_result is not None:
-            query_result = graph_check(graph_id, query_result[0])
+            query_result = graph_check(graph_id, query_result[2])
             if query_result[0] == 1:
-                query = f'''Select 1 from "link" WHERE linkid = {link_id};'''
+                query = f'''Select 1 from "link" WHERE "linkid" = {link_id};'''
                 cur.execute(query)
                 query_result = cur.fetchone()
                 if query_result[0] == 1:
-                    query = f'''UPDATE "link" SET value = '{value}' where linkid = {link_id};'''
+                    query = f'''UPDATE "link" SET "value" = {value} where "linkid" = {link_id};'''
                     cur.execute(query)
                     return True
                 else:
