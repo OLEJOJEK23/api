@@ -495,8 +495,10 @@ def get_max_node_id() -> int:
         query = f'''Select max("nodeid") from "node";'''
         cur.execute(query)
         query_result = cur.fetchone()
-        print(query_result)
-        return query_result[0]
+        if query_result[0]:
+            return query_result[0]
+        else:
+            return 1
     except Exception as ex:
         logger.error(str(ex))
     finally:
