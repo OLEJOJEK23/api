@@ -1,7 +1,6 @@
 from flask import Flask
 from flask import request
 from loguru import logger
-import json
 from resources.functions import (create_account, delete_account, update_password, create_session, delete_session,
                                  get_session_list, get_graph_list, update_graph, delete_graph, add_graph,
                                  get_node_list, delete_node, update_node, add_node,
@@ -128,7 +127,7 @@ def change_node() -> str:
     return "Node was not been updated"
 
 
-@app.route('/graphs/delete', methods=['DELETE'])
+@app.route('/nodes/delete', methods=['DELETE'])
 def remove_node() -> str:
     token = request.args.get('token')
     id = int(request.args.get('id'))
