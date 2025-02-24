@@ -437,7 +437,7 @@ def get_link_list(token: str, graphid: int) -> list[tuple]:
         if query_result is not None:
             query_result = graph_check(graphid, query_result[2])
             if query_result[0] == 1:
-                query = f'''Select json_agg(json_build_object('id',"linkid",'souce',"source",'target',
+                query = f'''Select json_agg(json_build_object('id',"linkid",'source',"source",'target',
                 "target",'value',"value")) FROM "link" WHERE "graphid" = {graphid}'''
                 cur.execute(query)
                 query_result = cur.fetchall()
