@@ -4,7 +4,7 @@ from loguru import logger
 from resources.functions import (create_account, delete_account, update_password, create_session, delete_session,
                                  get_session_list, get_graph_list, update_graph, delete_graph, add_graph,
                                  get_node_list, delete_node, update_node, add_node,
-                                 get_link_list, delete_link, add_link, update_link)
+                                 get_link_list, delete_link, add_link, update_link, get_max_node_id)
 
 
 logger.add('misc/logs/debug.log', format='{time} {level} {message}', level="DEBUG")
@@ -172,6 +172,12 @@ def remove_link() -> str:
     if delete_link(token, id):
         return "Link has been successfully deleted"
     return "Link was not deleted"
+
+
+
+@app.route('/maxID', methods=['GET'])
+def get_max_id() -> str:
+    return str(get_max_node_id())
 
 
 if __name__ == '__main__':

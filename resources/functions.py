@@ -485,3 +485,21 @@ def update_link(token: str, graph_id: int, link_id: int, value: float) -> bool:
         cur.close()
         connection.commit()
         connection.close()
+
+
+@logger.catch()
+def get_max_node_id() -> int:
+    connection = db_connection()
+    cur = connection.cursor()
+    try:
+        query = f'''Select max("nodeid") from "node";'''
+        cur.execute(query)
+        query_result = cur.fetchone()
+        print(query_result)
+        return query_result[0]
+    except Exception as ex:
+        logger.error(str(ex))
+    finally:
+        cur.close()
+        connection.commit()
+        connection.close()

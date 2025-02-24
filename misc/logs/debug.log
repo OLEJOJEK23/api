@@ -11,3 +11,17 @@ LINE 1: Select Select json_agg(json_build_object('id',"sessionID",'t...
 LINE 1: Select Select json_agg(json_build_object('id',"sessionID",'t...
                ^
 
+2025-02-24T10:22:40.674216+0300 ERROR ОШИБКА:  отношение "graph" не существует
+LINE 2:             FROM "graph" WHERE ownerID = 261
+                         ^
+
+2025-02-24T10:22:50.512628+0300 ERROR ОШИБКА:  отношение "graph" не существует
+LINE 2:             FROM "graph" WHERE ownerID = 261
+                         ^
+
+2025-02-24T10:23:40.492571+0300 ERROR ОШИБКА:  отношение "graph" не существует
+LINE 2:             FROM "graph" WHERE ownerID = 261
+                         ^
+
+2025-02-24T10:29:14.245015+0300 ERROR ОШИБКА:  нет доступа к таблице users
+
